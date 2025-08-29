@@ -2,6 +2,13 @@
 // contact.php: Receives JSON { name, email, inquiry } and sends email via SMTP using PHPMailer
 // Responds with JSON: { ok: true } or { ok: false, error: '...' }
 
+require_once __DIR__ . '/config.php';
+if (!load_env()) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'error' => 'Server configuration error']);
+    exit;
+}
+
 header('Content-Type: application/json');
 // Basic CORS support (helps during local dev or cross-origin production use)
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
