@@ -119,6 +119,7 @@ if ($useMailer) {
     exit;
   } catch (Throwable $e) {
     http_response_code(500);
+    error_log('SMTP Error: ' . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     echo json_encode(['ok' => false, 'error' => 'SMTP error: ' . $e->getMessage()]);
     exit;
   }

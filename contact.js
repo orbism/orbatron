@@ -13,13 +13,15 @@
   const fields = overlay ? overlay.querySelectorAll('.cf-field') : [];
   const submitBtn = overlay ? overlay.querySelector('.cf-submit') : null;
   const hpField = overlay ? overlay.querySelector('#cf-hp') : null;
+  const closeBtn = overlay ? overlay.querySelector('.contact-close') : null;
 
   if (!overlay || !box || !rect || !form || !title || !fields || !submitBtn) return;
 
   // Hook mail icons
   function hookMailIcons() {
-    const links = Array.from(document.querySelectorAll('a[href^="mailto:"]'));
+    const links = Array.from(document.querySelectorAll('.far.fa-envelope')).map(icon => icon.closest('a'));
     links.forEach(link => {
+      if (!link) return;
       link.addEventListener('click', (e) => {
         e.preventDefault();
         openOverlay();
@@ -45,8 +47,10 @@
       rect.style.strokeDashoffset = '0';
     });
 
-    // After border draw, reveal form elements sequentially
+    // After border draw, reveal close button and form elements sequentially
     setTimeout(() => {
+      closeBtn.style.opacity = '1';
+      closeBtn.style.pointerEvents = 'auto';
       form.style.transition = 'opacity 0.25s ease';
       form.style.opacity = '1';
 
@@ -134,8 +138,27 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({ ok: false }));
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Send failed');
+      const data = await res.json().catch(e => {
+        console.error('Failed to parse response:', e);
+        return { ok: false, error: 'Invalid response from server' };
+      });
+      
+      if (!res.ok || !data.ok) {
+        console.error('Form submission failed:', {
+          status: res.status,
+          statusText: res.statusText,
+          response: data
+        });
+        throw new Error(data.error || 'Send failed');
+      }
+      
+      // Log success details
+      console.log('Form submitted successfully:', {
+        name: payload.name,
+        email: payload.email,
+        inquiryLength: payload.inquiry.length,
+        response: data
+      });
 
       // Success: fade out form, show thank you, un-draw rectangle
       form.style.transition = 'opacity 0.3s ease';
@@ -150,7 +173,7 @@
           thanks.style.opacity = '1';
         });
         
-        // Click anywhere to dismiss with rectangle un-draw
+        // Click anywhere to dismiss with rectangle un-draw and text decode
         overlay.addEventListener('click', () => {
           // Start un-drawing the rectangle
           const length = 2 * (494 + 694); // perimeter of the rect
@@ -160,6 +183,23 @@
           requestAnimationFrame(() => {
             rect.style.strokeDashoffset = String(length);
           });
+
+          // Start decoding animation on thank you text
+          const originalText = thanks.textContent;
+          let elapsed = 0;
+          const step = 25; // matches character cycle speed
+          const decodeTimer = setInterval(() => {
+            elapsed += step;
+            if (elapsed >= 800) { // decode for 0.8s
+              clearInterval(decodeTimer);
+              return;
+            }
+            let out = '';
+            for (let i = 0; i < originalText.length; i++) {
+              out += chars[Math.floor(Math.random() * chars.length)];
+            }
+            thanks.textContent = out;
+          }, step);
           
           // After rectangle un-draws, fade out background
           setTimeout(() => {
@@ -184,8 +224,40 @@
     }
   }
 
+  // Close form with un-draw animation
+  function closeForm() {
+    // First fade out close button and form
+    closeBtn.style.opacity = '0';
+    closeBtn.style.pointerEvents = 'none';
+    
+    const length = 2 * (494 + 694);
+    rect.style.transition = 'stroke-dashoffset 1.1s ease';
+    rect.style.strokeDasharray = String(length);
+    rect.style.strokeDashoffset = '0';
+    requestAnimationFrame(() => {
+      rect.style.strokeDashoffset = String(length);
+    });
+
+    // Fade out form
+    form.style.transition = 'opacity 0.3s ease';
+    form.style.opacity = '0';
+
+    // Fade out background after un-draw
+    setTimeout(() => {
+      overlay.style.transition = 'background 0.4s ease';
+      overlay.style.background = 'rgba(0,0,0,0)';
+      setTimeout(() => {
+        overlay.style.pointerEvents = 'none';
+        form.reset();
+        form.style.display = '';
+        rect.style.transition = 'none';
+      }, 400);
+    }, 1100);
+  }
+
   function attachFormHandlers() {
     submitBtn.addEventListener('click', handleSubmit);
+    closeBtn.addEventListener('click', closeForm);
     fields.forEach(f => {
       f.addEventListener('input', () => {
         if (f.classList.contains('invalid')) {

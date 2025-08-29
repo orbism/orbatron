@@ -76,6 +76,31 @@ footer {
     opacity: 0;
     overflow: hidden; /* keep contents inside rectangle */
 }
+
+.contact-close {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    color: #42de93;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.contact-close:hover {
+    color: #dbfecc;
+}
 .contact-border {
     position: absolute;
     top: 0;
