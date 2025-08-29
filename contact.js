@@ -185,22 +185,16 @@
             rect.style.strokeDashoffset = String(length);
           });
 
-          // Start decoding animation and fade simultaneously
+          // Decode and fade simultaneously until fully invisible
           const originalText = thanks.textContent;
-          let elapsed = 0;
-          const totalDuration = 800; // total animation time
-          thanks.style.transition = 'opacity 0.6s ease';
+          thanks.style.transition = 'opacity 0.8s ease';
+          thanks.style.opacity = '0';
           
           const decodeTimer = setInterval(() => {
-            elapsed += step;
-            if (elapsed >= totalDuration) {
+            if (parseFloat(getComputedStyle(thanks).opacity) <= 0.01) {
               clearInterval(decodeTimer);
               if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
               return;
-            }
-            // Start fade at halfway point
-            if (elapsed >= totalDuration / 2) {
-              thanks.style.opacity = 1 - ((elapsed - totalDuration/2) / (totalDuration/2));
             }
             let out = '';
             for (let i = 0; i < originalText.length; i++) {
