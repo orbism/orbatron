@@ -71,7 +71,7 @@ footer {
 }
 .contact-box {
     position: relative;
-    width: 500px;
+    width: 400px;
     height: 700px;
     opacity: 0;
     overflow: hidden; /* keep contents inside rectangle */
