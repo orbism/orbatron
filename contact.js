@@ -137,7 +137,7 @@
       const data = await res.json().catch(() => ({ ok: false }));
       if (!res.ok || !data.ok) throw new Error(data.error || 'Send failed');
 
-      // Success: fade out form, show thank you
+      // Success: fade out form, show thank you, un-draw rectangle
       form.style.transition = 'opacity 0.3s ease';
       form.style.opacity = '0';
       setTimeout(() => {
@@ -149,18 +149,32 @@
         requestAnimationFrame(() => {
           thanks.style.opacity = '1';
         });
-        // Click anywhere to dismiss
+        
+        // Click anywhere to dismiss with rectangle un-draw
         overlay.addEventListener('click', () => {
-          overlay.style.transition = 'background 0.4s ease';
-          overlay.style.background = 'rgba(0,0,0,0)';
+          // Start un-drawing the rectangle
+          const length = 2 * (494 + 694); // perimeter of the rect
+          rect.style.transition = 'stroke-dashoffset 1.1s ease';
+          rect.style.strokeDasharray = String(length);
+          rect.style.strokeDashoffset = '0';
+          requestAnimationFrame(() => {
+            rect.style.strokeDashoffset = String(length);
+          });
+          
+          // After rectangle un-draws, fade out background
           setTimeout(() => {
-            overlay.style.pointerEvents = 'none';
-            // reset form for next open
-            form.reset();
-            form.style.display = '';
-            form.style.opacity = '0';
-            if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
-          }, 400);
+            overlay.style.transition = 'background 0.4s ease';
+            overlay.style.background = 'rgba(0,0,0,0)';
+            setTimeout(() => {
+              overlay.style.pointerEvents = 'none';
+              // reset form for next open
+              form.reset();
+              form.style.display = '';
+              form.style.opacity = '0';
+              rect.style.transition = 'none';
+              if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
+            }, 400);
+          }, 1100);
         }, { once: true });
       }, 300);
     } catch (e) {
