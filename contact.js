@@ -32,6 +32,7 @@
   // Open overlay with fade, draw border, then show form
   function openOverlay() {
     overlay.style.pointerEvents = 'auto';
+    overlay.removeAttribute('inert');
     overlay.style.transition = 'background 0.4s ease';
     overlay.style.background = 'rgba(0,0,0,1)';
 
@@ -184,7 +185,7 @@
             rect.style.strokeDashoffset = String(length);
           });
 
-          // Start decoding animation on thank you text
+          // Start decoding animation on thank you text with fade out
           const originalText = thanks.textContent;
           let elapsed = 0;
           const step = 25; // matches character cycle speed
@@ -192,6 +193,8 @@
             elapsed += step;
             if (elapsed >= 800) { // decode for 0.8s
               clearInterval(decodeTimer);
+              thanks.style.transition = 'opacity 0.3s ease';
+              thanks.style.opacity = '0';
               return;
             }
             let out = '';
@@ -207,6 +210,7 @@
             overlay.style.background = 'rgba(0,0,0,0)';
             setTimeout(() => {
               overlay.style.pointerEvents = 'none';
+              overlay.setAttribute('inert', '');
               // reset form for next open
               form.reset();
               form.style.display = '';

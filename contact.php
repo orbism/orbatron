@@ -115,7 +115,14 @@ if ($useMailer) {
     $mail->AltBody = strip_tags($name . " has sent you a message from " . $email . ". They said:\n\n" . $inquiry . "\n\nSent on: " . $sentAt . " from IP " . $ip . ".");
 
     $mail->send();
-    echo json_encode(['ok' => true]);
+    error_log('Email sent successfully to: ' . $toAddress . ' from: ' . $fromEmail);
+    echo json_encode(['ok' => true, 'debug' => [
+      'smtp_host' => $mail->Host,
+      'smtp_port' => $mail->Port,
+      'smtp_user' => $smtpUser,
+      'from_email' => $fromEmail,
+      'to_email' => $toAddress
+    ]]);
     exit;
   } catch (Throwable $e) {
     http_response_code(500);
