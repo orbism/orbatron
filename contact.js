@@ -185,21 +185,22 @@
             rect.style.strokeDashoffset = String(length);
           });
 
-          // Start decoding animation on thank you text with fade out
+          // Start decoding animation and fade simultaneously
           const originalText = thanks.textContent;
           let elapsed = 0;
-          const step = 25; // matches character cycle speed
+          const totalDuration = 800; // total animation time
+          thanks.style.transition = 'opacity 0.6s ease';
+          
           const decodeTimer = setInterval(() => {
             elapsed += step;
-            if (elapsed >= 600) { // decode for 0.6s, then start fade
+            if (elapsed >= totalDuration) {
               clearInterval(decodeTimer);
-              thanks.style.transition = 'opacity 0.4s ease';
-              thanks.style.opacity = '0';
-              // Remove after fade completes (just before border finishes)
-              setTimeout(() => {
-                if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
-              }, 400);
+              if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
               return;
+            }
+            // Start fade at halfway point
+            if (elapsed >= totalDuration / 2) {
+              thanks.style.opacity = 1 - ((elapsed - totalDuration/2) / (totalDuration/2));
             }
             let out = '';
             for (let i = 0; i < originalText.length; i++) {

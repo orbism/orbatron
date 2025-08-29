@@ -13,7 +13,7 @@ function load_env() {
         
         list($name, $value) = explode('=', $line, 2);
         $name = trim($name);
-        $value = trim($value);
+        $value = trim($value, " \t\n\r\0\x0B\"'"); // Strip quotes and whitespace
         
         if (!empty($name)) {
             putenv(sprintf('%s=%s', $name, $value));

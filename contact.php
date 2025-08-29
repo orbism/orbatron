@@ -123,10 +123,11 @@ if ($useMailer) {
     $mail->Username = $smtpUser;
     $mail->Password = $smtpPass;
 
-    $fromEmail = getenv('SMTP_FROM') ?: 'no-reply@orbatron.org';
-    $mail->setFrom($fromEmail, 'orbatron.org');
-    $mail->addAddress($toAddress);
-    $mail->addReplyTo($email, $name);
+    $fromEmail = preg_replace('/.*<(.+?)>.*/', '$1', getenv('SMTP_FROM')) ?: 'no-reply@orbatron.org';
+    $toEmail = preg_replace('/.*<(.+?)>.*/', '$1', getenv('EMAIL_TO'));
+    $mail->setFrom($fromEmail);
+    $mail->addAddress($toEmail);
+    $mail->addReplyTo($email);
     $mail->Subject = $subject;
     $mail->isHTML(true);
     $mail->Body = $html;
