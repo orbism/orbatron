@@ -136,6 +136,32 @@
 
   <main class="column"></main>
 
+  <!-- Contact Overlay -->
+  <div id="contact-overlay" aria-hidden="true" data-recaptcha-sitekey="">
+    <div class="contact-stage">
+      <div class="contact-box" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+        <svg class="contact-border" width="500" height="700" viewBox="0 0 500 700" xmlns="http://www.w3.org/2000/svg">
+          <rect class="border-rect" x="3" y="3" width="494" height="694" rx="0" ry="0"/>
+        </svg>
+        <form class="contact-form" novalidate>
+          <h2 id="contact-title" class="contact-title">let’s connect</h2>
+          <div class="visually-hidden">
+            <label for="cf-hp">Do not fill this out</label>
+            <input id="cf-hp" name="hp" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <label class="visually-hidden" for="cf-name">Your Name</label>
+          <input id="cf-name" name="name" type="text" placeholder="Your Name" class="cf-field" autocomplete="name" />
+          <label class="visually-hidden" for="cf-email">Your Email</label>
+          <input id="cf-email" name="email" type="email" placeholder="Your Email" class="cf-field" autocomplete="email" />
+          <label class="visually-hidden" for="cf-inquiry">Your Inquiry</label>
+          <textarea id="cf-inquiry" name="inquiry" placeholder="Your Inquiry" rows="4" class="cf-field cf-textarea"></textarea>
+          <button type="button" class="cf-submit">connect</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="loading-animation.js"></script>
+  <script src="contact.js"></script>
 </body>
 </html>

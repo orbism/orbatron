@@ -54,6 +54,162 @@ footer {
     margin-top: 3em;
 }
 
+/* Contact Overlay */
+#contact-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    z-index: 2000;
+    pointer-events: none;
+}
+.contact-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.contact-box {
+    position: relative;
+    width: 500px;
+    height: 700px;
+    opacity: 0;
+    overflow: hidden; /* keep contents inside rectangle */
+}
+.contact-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 500px;
+    height: 700px;
+}
+.contact-border .border-rect {
+    fill: none;
+    stroke: #42de93;
+    stroke-width: 6;
+    stroke-linejoin: miter;
+    stroke-linecap: butt;
+    stroke-dasharray: 2400;
+    stroke-dashoffset: 2400; /* animated to 0 */
+}
+.contact-form {
+    position: absolute;
+    inset: 0;
+    padding: 36px; /* increased padding */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* vertical centering */
+    align-items: stretch; /* fields fill available width inside padding */
+    gap: 14px;
+    opacity: 0; /* fade in after border draw */
+    box-sizing: border-box;
+}
+.contact-title {
+    margin: 12px 0 6px 0;
+    text-transform: lowercase;
+    color: #42de93;
+    font-size: 28px;
+    text-align: center;
+}
+.cf-field {
+    background: #222;
+    color: #9aa08f;
+    border: 1px solid #59604a;
+    border-radius: 10px;
+    padding: 12px 14px; /* increased */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px; /* increased */
+    outline: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.cf-field:focus {
+    background: #000;
+    color: #dbfecc;
+    border-color: #42de93;
+    box-shadow: 0 0 0 2px rgba(66,222,147,0.15) inset;
+}
+.cf-textarea {
+    resize: vertical;
+    min-height: 6em;
+}
+.cf-submit {
+    align-self: flex-end;
+    background: #000;
+    color: #42de93;
+    border: 3px solid #42de93;
+    border-radius: 10px;
+    padding: 12px 18px; /* increased */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px; /* increased */
+    cursor: pointer;
+    transition: color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+.cf-submit:hover, .cf-submit:focus {
+    color: #000;
+    box-shadow: inset 0 0 0 100px #42de93;
+}
+.cf-submit.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+.visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+/* Error burst + shake */
+.contact-box.shake {
+    animation: cf-shake 400ms ease;
+}
+@keyframes cf-shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+    100% { transform: translateX(0); }
+}
+
+#contact-overlay.error-burst .contact-border .border-rect {
+    transition: stroke 0s;
+    stroke: #ff3b3b;
+}
+#contact-overlay.error-burst .contact-title {
+    transition: color 0s;
+    color: #ff3b3b;
+}
+#contact-overlay.error-burst .cf-field,
+#contact-overlay .cf-field.invalid {
+    border-color: #ff3b3b !important;
+    color: #ff9b9b;
+}
+#contact-overlay.error-burst .cf-submit {
+    transition: color 0s, box-shadow 0s, border-color 0s;
+    color: #ff3b3b;
+    border-color: #ff3b3b;
+    box-shadow: none;
+}
+
+/* Thank you message */
+.contact-thanks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dbfecc;
+    font-size: 22px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
 /* Loading Animation */
 #loading-overlay {
     position: fixed;
@@ -78,18 +234,11 @@ footer {
 }
 
 .text-row {
-    height: 1.5em;
-    line-height: 1.5em;
-    text-align: center;
-}
-
-.text-row {
     height: 1em;
     line-height: 1em;
     text-align: center;
     display: grid;
     grid-template-columns: repeat(3, 1em);
-    gap: 0.4em;
     justify-content: center;
     margin: 0.1em 0;
 }
