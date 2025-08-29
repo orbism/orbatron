@@ -100,18 +100,11 @@
   function setSubmitting(isSubmitting) {
     if (!submitBtn) return;
     submitBtn.classList.toggle('disabled', isSubmitting);
+    const original = 'connect';
+    const step = 25;
     if (isSubmitting) {
-      // Decoder animation on the button label
-      const original = 'connect';
-      let elapsed = 0;
-      const step = 25; // matches character cycle speed
-      const timer = setInterval(() => {
-        elapsed += step;
-        if (elapsed >= 1200) { // 1.2s fun animation
-          clearInterval(timer);
-          submitBtn.textContent = original;
-          return;
-        }
+      if (submitBtn._decodeTimer) return; // already animating
+      submitBtn._decodeTimer = setInterval(() => {
         let out = '';
         for (let i = 0; i < original.length; i++) {
           out += String.fromCharCode(33 + Math.floor(Math.random() * 90));
@@ -119,7 +112,11 @@
         submitBtn.textContent = out;
       }, step);
     } else {
-      submitBtn.textContent = 'connect';
+      if (submitBtn._decodeTimer) {
+        clearInterval(submitBtn._decodeTimer);
+        submitBtn._decodeTimer = null;
+      }
+      submitBtn.textContent = original;
     }
   }
 
@@ -173,6 +170,8 @@
         requestAnimationFrame(() => {
           thanks.style.opacity = '1';
         });
+        // Stop button animation once thank you is visible
+        setSubmitting(false);
         
         // Click anywhere to dismiss with rectangle un-draw and text decode
         overlay.addEventListener('click', () => {
@@ -222,7 +221,6 @@
       }, 300);
     } catch (e) {
       burstError();
-    } finally {
       setSubmitting(false);
     }
   }
@@ -277,6 +275,86 @@
   document.addEventListener('DOMContentLoaded', () => {
     hookMailIcons();
     attachFormHandlers();
+    // Hover/tap decode behavior for heading text
+    const itme = document.querySelector('.itme');
+    if (itme) {
+      const baseLetters = ['o','r','b','a','n','i','s','m','a'];
+      const altLetters  = ['o','r','b','a','t','r','o','n'];
+      const step = 25;
+      const perLetterDuration = 300; // ms of scrambling per changed letter
+      const perLetterOffset = 120;   // ms stagger between letters
+      let running = false;
+      let revertTimer = null;
+      let activeIntervals = [];
+
+      function toSpacedString(letters) {
+        return letters.join(' ') + ' ';
+      }
+      function updateHeading(letters) {
+        itme.textContent = toSpacedString(letters);
+      }
+      function indicesToChange(fromArr, toArr) {
+        const maxLen = Math.max(fromArr.length, toArr.length);
+        const idxs = [];
+        for (let i = 0; i < maxLen; i++) {
+          const a = fromArr[i] || '';
+          const b = toArr[i] || '';
+          if (a !== b) idxs.push(i);
+        }
+        return idxs;
+      }
+      function randomChar() {
+        return String.fromCharCode(33 + Math.floor(Math.random() * 90));
+      }
+
+      function animateLetters(fromArr, toArr, onDone) {
+        running = true;
+        if (revertTimer) { clearTimeout(revertTimer); revertTimer = null; }
+        activeIntervals.forEach(id => clearInterval(id));
+        activeIntervals = [];
+        const work = fromArr.slice();
+        updateHeading(work);
+        const idxs = indicesToChange(fromArr, toArr);
+        if (idxs.length === 0) { running = false; if (onDone) onDone(); return; }
+        let completed = 0;
+        idxs.forEach((idx, order) => {
+          const startDelay = order * perLetterOffset;
+          setTimeout(() => {
+            const endAt = Date.now() + perLetterDuration;
+            const intervalId = setInterval(() => {
+              if (Date.now() >= endAt) {
+                clearInterval(intervalId);
+                activeIntervals = activeIntervals.filter(id => id !== intervalId);
+                work[idx] = (toArr[idx] || '');
+                updateHeading(work);
+                completed++;
+                if (completed === idxs.length) {
+                  running = false;
+                  if (onDone) onDone();
+                }
+                return;
+              }
+              work[idx] = randomChar();
+              updateHeading(work);
+            }, step);
+            activeIntervals.push(intervalId);
+          }, startDelay);
+        });
+      }
+
+      function triggerForward() {
+        if (running) return;
+        animateLetters(baseLetters, altLetters, () => {
+          revertTimer = setTimeout(() => {
+            if (!running) animateLetters(altLetters, baseLetters, null);
+          }, 2000);
+        });
+      }
+
+      updateHeading(baseLetters);
+      itme.addEventListener('pointerenter', triggerForward);
+      itme.addEventListener('touchstart', (e) => { e.preventDefault(); triggerForward(); }, { passive: false });
+    }
   });
 
   document.addEventListener('DOMContentLoaded', hookMailIcons);
