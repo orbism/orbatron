@@ -191,10 +191,14 @@
           const step = 25; // matches character cycle speed
           const decodeTimer = setInterval(() => {
             elapsed += step;
-            if (elapsed >= 800) { // decode for 0.8s
+            if (elapsed >= 600) { // decode for 0.6s, then start fade
               clearInterval(decodeTimer);
-              thanks.style.transition = 'opacity 0.3s ease';
+              thanks.style.transition = 'opacity 0.4s ease';
               thanks.style.opacity = '0';
+              // Remove after fade completes (just before border finishes)
+              setTimeout(() => {
+                if (thanks && thanks.parentNode) thanks.parentNode.removeChild(thanks);
+              }, 400);
               return;
             }
             let out = '';

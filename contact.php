@@ -97,18 +97,29 @@ $html = '<html><body style="font-family:monospace;">'
 
 $toAddress = getenv('EMAIL_TO') ?: 'orb@orbatron.org';
 
+// Debug log env vars
+error_log("SMTP Config - Host: " . getenv('SMTP_HOST') . 
+          ", Port: " . getenv('SMTP_PORT') . 
+          ", User: " . getenv('SMTP_USER') . 
+          ", From: " . getenv('SMTP_FROM') . 
+          ", To: " . getenv('EMAIL_TO'));
+
 if ($useMailer) {
   // Using PHPMailer with SMTP
   try {
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    $mail->SMTPDebug = 3; // Enable verbose debug output
+    $mail->Debugoutput = function($str, $level) { error_log("PHPMailer: $str"); };
     $mail->isSMTP();
     $mail->Host = getenv('SMTP_HOST') ?: 'smtp.dreamhost.com';
     $mail->Port = (int)(getenv('SMTP_PORT') ?: 587);
     $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
     $mail->SMTPAuth = true;
-    // SMTP credentials from environment
-    $smtpUser = getenv('SMTP_USER') ?: 'you@example.com';
-    $smtpPass = getenv('SMTP_PASS') ?: 'replace-me';
+    $smtpUser = getenv('SMTP_USER');
+    $smtpPass = getenv('SMTP_PASS');
+    if (!$smtpUser || !$smtpPass) {
+        throw new Exception('SMTP credentials not found in environment');
+    }
     $mail->Username = $smtpUser;
     $mail->Password = $smtpPass;
 
