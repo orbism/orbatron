@@ -79,9 +79,13 @@ if ($recaptchaSecret && $token) {
 
 // Load PHPMailer (expecting vendor/autoload.php if using Composer). If not available, simple mail() fallback.
 $useMailer = false;
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-  require __DIR__ . '/vendor/autoload.php';
+$vendorAutoload = __DIR__ . '/vendor/autoload.php';
+if (file_exists($vendorAutoload)) {
+  require $vendorAutoload;
   $useMailer = true;
+  error_log('PHPMailer: vendor autoload found, using SMTP');
+} else {
+  error_log('PHPMailer: vendor autoload NOT found, using mail() fallback');
 }
 
 $subject = 'Inquiry via orbatron.org';
@@ -123,9 +127,18 @@ if ($useMailer) {
     $mail->Username = $smtpUser;
     $mail->Password = $smtpPass;
 
-    $fromEmail = preg_replace('/.*<(.+?)>.*/', '$1', getenv('SMTP_FROM')) ?: 'no-reply@orbatron.org';
-    $toEmail = preg_replace('/.*<(.+?)>.*/', '$1', getenv('EMAIL_TO'));
-    $mail->setFrom($fromEmail);
+    $fromEnv = getenv('SMTP_FROM') ?: '';
+    $fromEmail = preg_replace('/.*<(.+?)>.*/', '$1', $fromEnv);
+    if (!$fromEmail) { $fromEmail = 'no-reply@orbatron.org'; }
+    $toEmail = preg_replace('/.*<(.+?)>.*/', '$1', getenv('EMAIL_TO') ?: $toAddress);
+    if (!$toEmail) { $toEmail = $toAddress; }
+
+    // For Gmail SMTP, the From should generally match the authenticated user
+    if (stripos($mail->Host, 'smtp.gmail.com') !== false) {
+      $mail->setFrom($smtpUser);
+    } else {
+      $mail->setFrom($fromEmail);
+    }
     $mail->addAddress($toEmail);
     $mail->addReplyTo($email);
     $mail->Subject = $subject;
@@ -134,18 +147,59 @@ if ($useMailer) {
     $mail->AltBody = strip_tags($name . " has sent you a message from " . $email . ". They said:\n\n" . $inquiry . "\n\nSent on: " . $sentAt . " from IP " . $ip . ".");
 
     $mail->send();
-    error_log('Email sent successfully to: ' . $toAddress . ' from: ' . $fromEmail);
+    error_log('Email sent successfully to: ' . $toEmail . ' via SMTP host: ' . $mail->Host);
     echo json_encode(['ok' => true, 'debug' => [
       'smtp_host' => $mail->Host,
       'smtp_port' => $mail->Port,
       'smtp_user' => $smtpUser,
-      'from_email' => $fromEmail,
-      'to_email' => $toAddress
+      'from_email' => (stripos($mail->Host, 'smtp.gmail.com') !== false ? $smtpUser : $fromEmail),
+      'to_email' => $toEmail
     ]]);
     exit;
   } catch (Throwable $e) {
+    error_log('SMTP Error (primary attempt): ' . $e->getMessage());
+    // If Gmail 587 STARTTLS fails, retry with implicit TLS on 465
+    $host = getenv('SMTP_HOST') ?: '';
+    $port = (int)(getenv('SMTP_PORT') ?: 587);
+    if (stripos($host, 'smtp.gmail.com') !== false && $port === 587) {
+      try {
+        $mail2 = new PHPMailer\PHPMailer\PHPMailer(true);
+        $mail2->SMTPDebug = 3;
+        $mail2->Debugoutput = function($str, $level) { error_log("PHPMailer(retry): $str"); };
+        $mail2->isSMTP();
+        $mail2->Host = 'smtp.gmail.com';
+        $mail2->Port = 465;
+        $mail2->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        $mail2->SMTPAuth = true;
+        $mail2->Username = $smtpUser;
+        $mail2->Password = $smtpPass;
+        $mail2->setFrom($smtpUser);
+        $mail2->addAddress($toEmail ?: $toAddress);
+        $mail2->addReplyTo($email);
+        $mail2->Subject = $subject;
+        $mail2->isHTML(true);
+        $mail2->Body = $html;
+        $mail2->AltBody = strip_tags($name . " has sent you a message from " . $email . ". They said:\n\n" . $inquiry . "\n\nSent on: " . $sentAt . " from IP " . $ip . ".");
+        $mail2->send();
+        error_log('Email sent successfully on retry (465 SMTPS) to: ' . ($toEmail ?: $toAddress));
+        echo json_encode(['ok' => true, 'debug' => [
+          'smtp_host' => $mail2->Host,
+          'smtp_port' => $mail2->Port,
+          'smtp_user' => $smtpUser,
+          'from_email' => $smtpUser,
+          'to_email' => ($toEmail ?: $toAddress),
+          'retry' => true
+        ]]);
+        exit;
+      } catch (Throwable $e2) {
+        http_response_code(500);
+        error_log('SMTP Error (retry failed): ' . $e2->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'SMTP error: ' . $e2->getMessage()]);
+        exit;
+      }
+    }
     http_response_code(500);
-    error_log('SMTP Error: ' . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+    error_log('SMTP Error (no retry): ' . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     echo json_encode(['ok' => false, 'error' => 'SMTP error: ' . $e->getMessage()]);
     exit;
   }
@@ -154,10 +208,21 @@ if ($useMailer) {
   $headers   = [];
   $headers[] = 'MIME-Version: 1.0';
   $headers[] = 'Content-type: text/html; charset=UTF-8';
-  $fromEmail = getenv('SMTP_FROM') ?: 'no-reply@orbatron.org';
-  $headers[] = 'From: orbatron.org <' . $fromEmail . '>';
+  $fromHeader = getenv('SMTP_FROM') ?: 'no-reply@orbatron.org';
+  // Force a domain-based envelope sender for reliability on shared hosts
+  $envelopeSender = 'no-reply@orbatron.org';
+  if (preg_match('/@gmail\./i', $fromHeader)) {
+    // Avoid using Gmail address in From when using local mail()
+    $headers[] = 'From: orbatron.org <' . $envelopeSender . '>';
+  } else {
+    $headers[] = 'From: orbatron.org <' . $fromHeader . '>';
+    $envelopeSender = $fromHeader;
+  }
   $headers[] = 'Reply-To: ' . $name . ' <' . $email . '>';
-  $ok = @mail($toAddress, $subject, $html, implode("\r\n", $headers));
+  @ini_set('sendmail_from', $envelopeSender);
+  $params = '-f ' . escapeshellarg($envelopeSender);
+  $ok = @mail($toAddress, $subject, $html, implode("\r\n", $headers), $params);
+  error_log('mail() fallback attempted: to=' . $toAddress . ', fromHeader=' . $fromHeader . ', envelope=' . $envelopeSender . ', ok=' . ($ok ? '1' : '0'));
   if ($ok) {
     echo json_encode(['ok' => true]);
   } else {
