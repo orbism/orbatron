@@ -85,7 +85,23 @@ if (file_exists($vendorAutoload)) {
   $useMailer = true;
   error_log('PHPMailer: vendor autoload found, using SMTP');
 } else {
-  error_log('PHPMailer: vendor autoload NOT found, using mail() fallback');
+  // Try DreamHost shared-server PHPMailer installation
+  $dhBase = getenv('PHPMAILER_PATH');
+  if (!$dhBase) {
+    $home = getenv('HOME') ?: ($_SERVER['HOME'] ?? '');
+    if ($home) {
+      $dhBase = rtrim($home, '/').'/php/PHPMailer';
+    }
+  }
+  if ($dhBase && file_exists($dhBase . '/src/PHPMailer.php') && file_exists($dhBase . '/src/SMTP.php') && file_exists($dhBase . '/src/Exception.php')) {
+    require $dhBase . '/src/PHPMailer.php';
+    require $dhBase . '/src/SMTP.php';
+    require $dhBase . '/src/Exception.php';
+    $useMailer = true;
+    error_log('PHPMailer: DreamHost shared install found at ' . $dhBase . ', using SMTP');
+  } else {
+    error_log('PHPMailer: vendor autoload NOT found, using mail() fallback');
+  }
 }
 
 $subject = 'Inquiry via orbatron.org';
