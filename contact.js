@@ -39,7 +39,7 @@
     // Border draw
     box.style.opacity = '1';
     box.classList.add('with-padding');
-    const length = 2 * (494 + 694); // perimeter of the rect
+    const length = 2 * (394 + 594); // perimeter of the rect
     rect.style.strokeDasharray = String(length);
     rect.style.strokeDashoffset = String(length);
     // Animate dashoffset
@@ -176,7 +176,7 @@
         // Click anywhere to dismiss with rectangle un-draw and text decode
         overlay.addEventListener('click', () => {
           // Start un-drawing the rectangle
-          const length = 2 * (494 + 694); // perimeter of the rect
+          const length = 2 * (394 + 594); // perimeter of the rect
           rect.style.transition = 'stroke-dashoffset 1.1s ease';
           rect.style.strokeDasharray = String(length);
           rect.style.strokeDashoffset = '0';
