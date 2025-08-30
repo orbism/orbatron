@@ -60,7 +60,7 @@
       sequence.forEach(el => {
         if (!el) return;
         el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s ease';
+        el.style.transition = 'all 0.25s ease';
         setTimeout(() => {
           el.style.opacity = '1';
         }, delay);

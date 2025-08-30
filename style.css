@@ -1,3 +1,8 @@
+:root {
+    --glow: #de613a;
+    --glow-rgb: 222 97 58;
+}
+
 body { 
     background: #222; 
     font-family: 'Share Tech Mono', monospace;
@@ -110,12 +115,17 @@ footer {
 }
 .contact-border .border-rect {
     fill: none;
-    stroke: #42de93;
+    /* stroke: #42de93; */
+    /* stroke: #de613a;  */
+    stroke: var(--glow);
     stroke-width: 6;
     stroke-linejoin: miter;
-    stroke-linecap: butt;
+    stroke-linecap: square;
     stroke-dasharray: 2400;
     stroke-dashoffset: 2400; /* animated to 0 */
+    filter:
+    drop-shadow(0 0 4px rgb(var(--glow-rgb) / 0.65))
+    drop-shadow(0 0 8px rgb(var(--glow-rgb) / 0.35));
 }
 .contact-form {
     position: absolute;
@@ -139,7 +149,7 @@ footer {
 .cf-field {
     background: #222;
     color: #9aa08f;
-    border: 1px solid #59604a;
+    border: 1px solid rgb(var(--glow-rgb) / 0.35);
     border-radius: 10px;
     padding: 12px 14px; /* increased */
     font-family: 'Share Tech Mono', monospace;
@@ -153,7 +163,7 @@ footer {
 .cf-field:focus {
     background: #000;
     color: #dbfecc;
-    border-color: #42de93;
+    border-color: rgb(var(--glow-rgb) / 0.65);
     box-shadow: 0 0 0 2px rgba(66,222,147,0.15) inset;
 }
 .cf-textarea {
@@ -170,10 +180,11 @@ footer {
     font-family: 'Share Tech Mono', monospace;
     font-size: 18px; /* increased */
     cursor: pointer;
-    transition: color 0.2s, box-shadow 0.2s, background 0.2s;
+    transition: ease all 0.2s;
     box-sizing: border-box;
 }
 .cf-submit:hover, .cf-submit:focus {
+    border-color: #000;
     color: #000;
     box-shadow: inset 0 0 0 100px #42de93;
 }
@@ -204,7 +215,7 @@ footer {
 
 #contact-overlay.error-burst .contact-border .border-rect {
     transition: stroke 0s;
-    stroke: #ff3b3b;
+    stroke: #ff3b3b; 
 }
 #contact-overlay.error-burst .contact-title {
     transition: color 0s;
@@ -350,7 +361,7 @@ p {
 }
 
 a {
-    color: #d6d9ce; 
+    color: #de613a;
     text-decoration: none; 
     cursor: pointer;
     transition: 0.3s ease all;
@@ -370,7 +381,13 @@ li {
     list-style: circle;
     line-height: 22px;
 }
-
+li::marker, .burnt, a i {
+    color: #de613a;
+    transition: ease all 0.2s;
+}
+a i:hover {
+    color: #42de93;
+}
 .pdl1 {
     padding-left: 1em;
 }

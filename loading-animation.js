@@ -39,8 +39,8 @@ class MatrixEffect {
                             // Set final character and make it white
                             this.element.style.transition = 'none';
                             this.element.textContent = this.finalChar;
-                            this.element.style.color = 'white';
-                            this.element.style.textShadow = '0 0 8px white';
+                            this.element.style.color = '#de613a';
+                            this.element.style.textShadow = '0 0 8px #de613a';
                             
                             // Start color transition
                             requestAnimationFrame(() => {
